@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "users": {
+      "title": "User",
+      "description": "User profile with role and status",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "worker"] },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "status"]
+    },
+    "materials": {
+      "title": "Material",
+      "description": "Inventory of materials with unit prices",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "unit": { "type": "string" },
+        "unitPrice": { "type": "number" },
+        "category": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "unit", "unitPrice"]
+    },
+    "quotes": {
+      "title": "Quote",
+      "description": "Construction or service quote",
+      "type": "object",
+      "properties": {
+        "quoteNumber": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "validityDays": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "pending_review", "approved", "rejected", "sent"] },
+        "client": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "nif": { "type": "string" },
+            "address": { "type": "string" },
+            "phone": { "type": "string" },
+            "email": { "type": "string" }
+          }
+        },
+        "workDescription": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "materialId": { "type": "string" },
+              "name": { "type": "string" },
+              "quantity": { "type": "number" },
+              "unitPrice": { "type": "number" },
+              "total": { "type": "number" }
+            }
+          }
+        },
+        "laborCost": { "type": "number" },
+        "additionalCosts": { "type": "number" },
+        "subtotal": { "type": "number" },
+        "taxRate": { "type": "number" },
+        "taxAmount": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentMethods": { "type": "array", "items": { "type": "string" } },
+        "conditions": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "approvedBy": { "type": "string" }
+      },
+      "required": ["quoteNumber", "date", "status", "client", "items", "total"]
+    },
+    "companyInfo": {
+      "title": "Company Info",
+      "description": "Business details for quote headers",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "legalName": { "type": "string" },
+        "nif": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "website": { "type": "string" },
+        "logoUrl": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "users",
+      "description": "User profiles and roles"
+    },
+    "materials": {
+      "schema": "materials",
+      "description": "Material inventory"
+    },
+    "quotes": {
+      "schema": "quotes",
+      "description": "Generated quotes"
+    },
+    "settings/company": {
+      "schema": "companyInfo",
+      "description": "Company settings"
+    }
+  }
+}

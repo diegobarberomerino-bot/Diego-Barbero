@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, email, role (admin/worker), status (approved/pending), createdAt
+    //
+    // Collection: materials
+    // Fields: name, unit, unitPrice, category, updatedAt
+    //
+    // Collection: quotes
+    // Fields: quoteNumber, date, status, client, items, total, createdBy, ...
+    //
+    // Collection: settings/company
+    // Fields: name, legalName, nif, address, phone, email, website, logoUrl
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email == "diegobarberomerino@gmail.com" && request.auth.token.email_verified == true) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isWorker() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'worker' && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAdmin() || isOwner(userId);
+      allow delete: if isAdmin();
+    }
+
+    match /materials/{materialId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /quotes/{quoteId} {
+      allow read: if isAuthenticated() && (isAdmin() || (isWorker() && resource.data.createdBy == request.auth.uid));
+      allow create: if (isWorker() || isAdmin()) && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /settings/company {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}
